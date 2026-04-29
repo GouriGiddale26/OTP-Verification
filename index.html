@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OTP Login</title>
+
+  <!-- Google Fonts — loaded from Google CDN, not an API -->
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@500&display=swap" rel="stylesheet"/>
+
+  <style>
+    /* ════════════════ RESET ════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ════════════════ VARIABLES ════════════ */
+    :root {
+      --bg:      #0b0b12;
+      --card:    #13131d;
+      --border:  #252535;
+      --accent:  #6c63ff;
+      --green:   #3ecf8e;
+      --red:     #f06060;
+      --text:    #e2e2f0;
+      --muted:   #64647a;
+      --glow:    rgba(108,99,255,.2);
+    }
+
+    /* ════════════════ BODY ════════════════ */
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    /* subtle grid background */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 55% 45% at 10% 15%, rgba(108,99,255,.1) 0%, transparent 65%),
+        radial-gradient(ellipse 40% 40% at 90% 85%, rgba(62,207,142,.07) 0%, transparent 65%),
+        repeating-linear-gradient(0deg,   transparent, transparent 39px, rgba(37,37,53,.5) 39px, rgba(37,37,53,.5) 40px),
+        repeating-linear-gradient(90deg,  transparent, transparent 39px, rgba(37,37,53,.5) 39px, rgba(37,37,53,.5) 40px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ════════════════ CARD ════════════════ */
+    .wrap  { position: relative; z-index: 1; width: 100%; max-width: 420px; }
+    .card  {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 38px 34px 34px;
+      box-shadow: 0 0 60px rgba(0,0,0,.5);
+      animation: rise .45s ease both;
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(22px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ════════════════ LOGO ════════════════ */
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 26px;
+    }
+    .logo-box {
+      width: 36px; height: 36px; border-radius: 9px;
+      background: linear-gradient(135deg, var(--accent), #a78bfa);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+    }
+    .logo-name { font-size: 17px; font-weight: 800; letter-spacing: -.4px; }
+    .logo-name em { color: var(--accent); font-style: normal; }
+
+    /* ════════════════ STEP DOTS ═══════════ */
+    .steps { display: flex; align-items: center; gap: 6px; margin-bottom: 26px; }
+    .step  {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .6px;
+      color: var(--muted); transition: color .3s;
+    }
+    .step.active { color: var(--accent); }
+    .step.done   { color: var(--green);  }
+    .dot {
+      width: 21px; height: 21px; border-radius: 50%;
+      border: 2px solid currentColor;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 800; flex-shrink: 0;
+      transition: all .3s;
+    }
+    .step.active .dot { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .step.done   .dot { background: var(--green);  border-color: var(--green);  color: #0b0b12; }
+    .line { flex: 1; height: 2px; background: var(--border); border-radius: 2px; transition: background .3s; }
+    .line.done { background: var(--green); }
+
+    /* ════════════════ HEADINGS ════════════ */
+    h1 { font-size: 24px; font-weight: 800; letter-spacing: -.8px; margin-bottom: 5px; }
+    .sub { font-size: 13px; color: var(--muted); margin-bottom: 26px; line-height: 1.55; }
+
+    /* ════════════════ LABELS + INPUTS ═════ */
+    .field { margin-bottom: 16px; }
+    label  {
+      display: block; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .7px;
+      color: var(--muted); margin-bottom: 7px;
+    }
+    input[type="email"], input[type="text"] {
+      width: 100%; padding: 12px 15px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      font-size: 15px; font-family: 'Syne', sans-serif;
+      color: var(--text); outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--glow);
+    }
+
+    /* ════════════════ OTP BOXES ═══════════ */
+    .otp-row { display: flex; gap: 9px; }
+    .otp-row input {
+      flex: 1; height: 54px; padding: 0;
+      text-align: center; font-size: 22px; font-weight: 700;
+      font-family: 'DM Mono', monospace;
+      color: var(--accent);
+      border-radius: 11px;
+    }
+    .otp-row input:focus   { transform: scale(1.06); }
+    .otp-row input.filled  {
+      border-color: rgba(108,99,255,.55);
+      background: rgba(108,99,255,.09);
+    }
+
+    /* ════════════════ BUTTONS ═════════════ */
+    .btn {
+      width: 100%; padding: 13px; border: none; border-radius: 11px;
+      font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700;
+      cursor: pointer; margin-top: 5px; transition: all .2s;
+    }
+    .btn-primary {
+      background: var(--accent); color: #fff;
+      box-shadow: 0 4px 18px rgba(108,99,255,.35);
+    }
+    .btn-primary:hover    { background: #5a52e0; transform: translateY(-2px); }
+    .btn-primary:active   { transform: translateY(0); }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted); font-size: 13px; margin-top: 9px;
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ════════════════ SPINNER ═════════════ */
+    .spin {
+      display: inline-block; width: 15px; height: 15px;
+      border: 2px solid rgba(255,255,255,.3); border-top-color: #fff;
+      border-radius: 50%; animation: s .7s linear infinite;
+      margin-right: 7px; vertical-align: middle;
+    }
+    @keyframes s { to { transform: rotate(360deg); } }
+
+    /* ════════════════ ALERTS ══════════════ */
+    .alert {
+      padding: 11px 13px; border-radius: 10px;
+      font-size: 13px; font-weight: 600;
+      margin-top: 13px; display: none; line-height: 1.4;
+      border: 1px solid transparent;
+    }
+    .alert.show    { display: block; animation: rise .3s ease both; }
+    .alert.success { background: rgba(62,207,142,.1);  border-color: rgba(62,207,142,.3);  color: var(--green); }
+    .alert.error   { background: rgba(240,96,96,.1);   border-color: rgba(240,96,96,.3);   color: var(--red);   }
+    .alert.info    { background: rgba(108,99,255,.1);  border-color: rgba(108,99,255,.3);  color: var(--accent);}
+
+    /* ════════════════ TIMER ═══════════════ */
+    .timer-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 13px;
+    }
+    .timer { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; }
+    .timer b { color: var(--accent); }
+    .resend {
+      font-size: 12px; font-weight: 700; color: var(--muted);
+      background: none; border: none; cursor: pointer;
+      text-decoration: underline; font-family: 'Syne', sans-serif;
+    }
+    .resend:hover    { color: var(--accent); }
+    .resend:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* ════════════════ DEV BOX ═════════════ */
+    .dev-box {
+      background: rgba(240,96,96,.07);
+      border: 1px solid rgba(240,96,96,.25);
+      border-radius: 10px; padding: 10px 13px;
+      margin-top: 13px; display: none;
+      font-family: 'DM Mono', monospace; font-size: 12px; color: #f09060;
+    }
+    .dev-box.show { display: block; }
+    .dev-box .lbl {
+      font-family: 'Syne', sans-serif; font-size: 10px;
+      text-transform: uppercase; letter-spacing: .5px;
+      opacity: .7; margin-bottom: 4px;
+    }
+    .dev-box .code { font-size: 26px; letter-spacing: 8px; color: #f06060; }
+
+    /* ════════════════ SUCCESS ═════════════ */
+    .success { display: none; text-align: center; padding: 8px 0; }
+    .success.show { display: block; animation: rise .5s ease both; }
+    .tick {
+      width: 68px; height: 68px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--green), #27a863);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px; margin: 0 auto 18px;
+      box-shadow: 0 0 28px rgba(62,207,142,.28);
+      animation: pop .5s cubic-bezier(.175,.885,.32,1.275) both;
+    }
+    @keyframes pop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .success h2  { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+    .success p   { font-size: 13px; color: var(--muted); }
+    .success .em { color: var(--accent); font-weight: 700; display: block; margin-top: 4px; }
+
+    /* ════════════════ PANELS ══════════════ */
+    #p1, #p2 { display: none; }
+    #p1.on, #p2.on { display: block; animation: rise .4s ease both; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+<div class="card">
+
+  <!-- LOGO -->
+  <div class="logo">
+    <div class="logo-box">🔐</div>
+    <div class="logo-name">Secure<em>OTP</em></div>
+  </div>
+
+  <!-- STEPS -->
+  <div class="steps">
+    <div class="step active" id="s1"><div class="dot" id="d1">1</div>Email</div>
+    <div class="line" id="ln"></div>
+    <div class="step" id="s2"><div class="dot" id="d2">2</div>Verify</div>
+  </div>
+
+  <!-- ══ PANEL 1: EMAIL ══ -->
+  <div id="p1" class="on">
+    <h1>Sign in securely</h1>
+    <p class="sub">We will send a one-time password to your email address.</p>
+
+    <div class="field">
+      <label>Email Address</label>
+      <input type="email" id="em-inp" placeholder="you@example.com" autocomplete="email"/>
+    </div>
+
+    <button class="btn btn-primary" id="send-btn" onclick="sendOTP()">Send OTP →</button>
+    <div class="alert" id="em-alert"></div>
+
+    <!-- Dev-mode OTP preview -->
+    <div class="dev-box" id="dev">
+      <div class="lbl">Dev Mode — Simulated OTP (also printed in terminal)</div>
+      <div class="code" id="dev-code"></div>
+    </div>
+  </div>
+
+  <!-- ══ PANEL 2: VERIFY ══ -->
+  <div id="p2">
+    <h1>Enter your code</h1>
+    <p class="sub">A 6-digit code was sent to <strong id="em-lbl"></strong></p>
+
+    <div class="field">
+      <label>One-Time Password</label>
+      <div class="otp-row" id="otp-row"></div>
+    </div>
+
+    <div class="timer-row">
+      <div class="timer">Expires in <b id="t-display">2:00</b></div>
+      <button class="resend" id="resend-btn" onclick="resendOTP()" disabled>Resend OTP</button>
+    </div>
+
+    <button class="btn btn-primary" id="ver-btn" style="margin-top:17px" onclick="verifyOTP()">Verify & Login →</button>
+    <button class="btn btn-ghost" onclick="goBack()">← Different email</button>
+    <div class="alert" id="otp-alert"></div>
+  </div>
+
+  <!-- ══ SUCCESS ══ -->
+  <div class="success" id="ok">
+    <div class="tick">✓</div>
+    <h2>You're logged in!</h2>
+    <p>Welcome back<span class="em" id="ok-em"></span></p>
+    <button class="btn btn-primary" style="margin-top:22px" onclick="doLogout()">Sign Out</button>
+  </div>
+
+</div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   CONFIG — Flask backend URL
+   ═══════════════════════════════════════════════════ */
+const BASE = "";          // empty = same origin (Flask serves this page)
+                           // If opening index.html directly from file system,
+                           // change to: "http://127.0.0.1:5000"
+
+/* ─── STATE ─────────────────────────────────────── */
+let userEmail = "";
+let countdown = null;
+
+/* ─── BUILD OTP INPUT BOXES ─────────────────────── */
+function buildBoxes() {
+  const row = document.getElementById("otp-row");
+  row.innerHTML = "";
+  for (let i = 0; i < 6; i++) {
+    const b = document.createElement("input");
+    b.type = "text"; b.maxLength = 1; b.inputMode = "numeric";
+    b.addEventListener("input", e => {
+      e.target.value = e.target.value.replace(/\D/g, "");
+      e.target.classList.toggle("filled", !!e.target.value);
+      if (e.target.value && i < 5) boxes()[i+1].focus();
+    });
+    b.addEventListener("keydown", e => {
+      if (e.key === "Backspace" && !e.target.value && i > 0) boxes()[i-1].focus();
+    });
+    b.addEventListener("paste", e => {
+      const txt = (e.clipboardData||window.clipboardData).getData("text").replace(/\D/g,"");
+      boxes().forEach((bx,j) => {
+        if (txt[j]) { bx.value = txt[j]; bx.classList.add("filled"); }
+      });
+      boxes()[Math.min(txt.length,5)].focus();
+      e.preventDefault();
+    });
+    row.appendChild(b);
+  }
+}
+function boxes()    { return [...document.querySelectorAll("#otp-row input")]; }
+function otpValue() { return boxes().map(b => b.value).join(""); }
+
+/* ─── ALERTS ─────────────────────────────────────── */
+function alert_(id, msg, type) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.className = "alert " + type + " show";
+}
+function clearAlert(id) { document.getElementById(id).className = "alert"; }
+
+/* ─── LOADING BUTTON ─────────────────────────────── */
+function setLoad(id, on) {
+  const b = document.getElementById(id); b.disabled = on;
+  if (on) { b._t = b.innerHTML; b.innerHTML = '<span class="spin"></span>Please wait…'; }
+  else     { b.innerHTML = b._t; }
+}
+
+/* ═══════════════════════════════════════════════════
+   STEP 1 — SEND OTP
+   POST /send-otp  { email }
+   ═══════════════════════════════════════════════════ */
+async function sendOTP() {
+  const email = document.getElementById("em-inp").value.trim();
+  if (!email || !email.includes("@")) {
+    alert_("em-alert", "⚠ Please enter a valid email.", "error"); return;
+  }
+  clearAlert("em-alert");
+  setLoad("send-btn", true);
+  userEmail = email;
+
+  try {
+    const res  = await fetch(BASE + "/send-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      alert_("em-alert", "✅ " + data.message, "success");
+
+      /* Show OTP on screen (dev mode only — remove in production) */
+      if (data.otp_preview) {
+        document.getElementById("dev-code").textContent = data.otp_preview;
+        document.getElementById("dev").classList.add("show");
+      }
+
+      setTimeout(showPanel2, 1000);
+    } else {
+      alert_("em-alert", "❌ " + data.message, "error");
+    }
+  } catch {
+    alert_("em-alert", "❌ Cannot reach server. Is Flask running?", "error");
+  } finally {
+    setLoad("send-btn", false);
+  }
+}
+
+function showPanel2() {
+  document.getElementById("p1").classList.remove("on");
+  document.getElementById("p2").classList.add("on");
+  document.getElementById("em-lbl").textContent = userEmail;
+  buildBoxes();
+  startTimer(120);
+  setSteps(2);
+  boxes()[0].focus();
+}
+
+/* ═══════════════════════════════════════════════════
+   STEP 2 — VERIFY OTP
+   POST /verify-otp  { email, otp }
+   ═══════════════════════════════════════════════════ */
+async function verifyOTP() {
+  const otp = otpValue();
+  if (otp.length !== 6) {
+    alert_("otp-alert", "⚠ Enter all 6 digits.", "error"); return;
+  }
+  clearAlert("otp-alert");
+  setLoad("ver-btn", true);
+
+  try {
+    const res  = await fetch(BASE + "/verify-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: userEmail, otp })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      stopTimer();
+      document.getElementById("p2").classList.remove("on");
+      document.getElementById("ok").classList.add("show");
+      document.getElementById("ok-em").textContent = userEmail;
+    } else {
+      alert_("otp-alert", "❌ " + data.message, "error");
+      boxes().forEach(b => { b.value = ""; b.classList.remove("filled"); });
+      boxes()[0].focus();
+    }
+  } catch {
+    alert_("otp-alert", "❌ Cannot reach server. Is Flask running?", "error");
+  } finally {
+    setLoad("ver-btn", false);
+  }
+}
+
+/* ─── RESEND ─────────────────────────────────────── */
+async function resendOTP() {
+  clearAlert("otp-alert");
+  document.getElementById("resend-btn").disabled = true;
+  try {
+    const res  = await fetch(BASE + "/send-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: userEmail })
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (data.otp_preview) {
+        document.getElementById("dev-code").textContent = data.otp_preview;
+        document.getElementById("dev").classList.add("show");
+      }
+      alert_("otp-alert", "✅ New OTP sent!", "success");
+      buildBoxes(); startTimer(120); boxes()[0].focus();
+    } else {
+      alert_("otp-alert", "❌ " + data.message, "error");
+      document.getElementById("resend-btn").disabled = false;
+    }
+  } catch {
+    alert_("otp-alert", "❌ Server error.", "error");
+    document.getElementById("resend-btn").disabled = false;
+  }
+}
+
+/* ─── TIMER ──────────────────────────────────────── */
+function startTimer(sec) {
+  stopTimer();
+  document.getElementById("resend-btn").disabled = true;
+  let rem = sec; tick(rem);
+  countdown = setInterval(() => {
+    rem--; tick(rem);
+    if (rem <= 0) {
+      stopTimer();
+      document.getElementById("t-display").textContent = "Expired";
+      document.getElementById("resend-btn").disabled = false;
+      alert_("otp-alert", "⏰ OTP expired. Request a new one.", "error");
+    }
+  }, 1000);
+}
+function tick(s) {
+  const m = Math.floor(s / 60), sc = String(s % 60).padStart(2, "0");
+  document.getElementById("t-display").textContent = `${m}:${sc}`;
+}
+function stopTimer() { clearInterval(countdown); }
+
+/* ─── NAVIGATION ─────────────────────────────────── */
+function goBack() {
+  stopTimer();
+  document.getElementById("p2").classList.remove("on");
+  document.getElementById("p1").classList.add("on");
+  clearAlert("em-alert");
+  document.getElementById("dev").classList.remove("show");
+  setSteps(1);
+}
+
+async function doLogout() {
+  try { await fetch(BASE + "/logout", { method: "POST" }); } catch {}
+  document.getElementById("ok").classList.remove("show");
+  document.getElementById("em-inp").value = "";
+  document.getElementById("dev").classList.remove("show");
+  document.getElementById("p1").classList.add("on");
+  setSteps(1);
+}
+
+/* ─── STEP INDICATOR ─────────────────────────────── */
+function setSteps(active) {
+  document.getElementById("s1").className = "step " + (active > 1 ? "done" : "active");
+  document.getElementById("d1").textContent = active > 1 ? "✓" : "1";
+  document.getElementById("s2").className = "step " + (active >= 2 ? "active" : "");
+  document.getElementById("ln").className = "line" + (active > 1 ? " done" : "");
+}
+
+/* ─── ENTER KEY ──────────────────────────────────── */
+document.addEventListener("keydown", e => {
+  if (e.key !== "Enter") return;
+  if (document.getElementById("p1").classList.contains("on")) sendOTP();
+  else if (document.getElementById("p2").classList.contains("on")) verifyOTP();
+});
+</script>
+</body>
+</html>
